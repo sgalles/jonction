@@ -4,7 +4,7 @@ About Jonction
 Summary
 -------
 
-Jonction was initially written because I wanted a simple and reliable solution to download and synchronise a set podcast feeds with my MP3 player
+Jonction was initially written because I wanted a simple and reliable solution to download and synchronise a set of podcast feeds with my MP3 player
 
 * For each feed I always want the n latest episodes on my player (meaning old episodes are automatically deleted)
 * I do not want a GUI as I also want it to work for a headless server (I want to be able to use old headless PC as a podcast sync device)
