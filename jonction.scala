@@ -487,7 +487,7 @@ class Jonction(remote: FeedRepository, local: FilesRepository, device: DeviceRep
 
 }
 
-class UrlRepository(file: String){
+class UrlRepository(file: File){
 	
 	val Url = """\s*(http\S+)\s*""".r	
 	
@@ -511,6 +511,7 @@ class Configuration(confFile: File){
 	}
 
 	def downloadDir() = new File(getProperty("download.dir"))
+	def urlsFile() = new File(getProperty("urls.file"))
 
 
 }
@@ -522,15 +523,15 @@ class Configuration(confFile: File){
 // Args
 val confFile = new File( if(args.length == 0) "jonction.properties" else args(0))
 
-// Dependency Injection
+// Instantiate
 val conf = new Configuration(confFile)
-val urls = new UrlRepository("urls.txt").getAll
+val urls = new UrlRepository(conf.urlsFile).getAll
 val remote = new FeedRepository(urls)
 val local = new FilesRepository(conf.downloadDir)
 val device = new DeviceRepository()
 val jonction = new Jonction(remote,local,device)
 
-// Main
+// Execute
 initJaudiotagger()
 jonction.syncRemoteToLocal()
 jonction.syncLocalToDevice()
