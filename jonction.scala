@@ -211,8 +211,8 @@ class FilesRepository(rootDir: File){
 	import org.jaudiotagger.tag.id3._	
 	import org.jaudiotagger.audio._
 
-	require(rootDir.exists,"rootDir does not exists : " + rootDir)
-	require(rootDir.isDirectory,"rootDir must be a directory : " + rootDir)
+	require(rootDir.exists,"rootDir does not exist : " + rootDir.getAbsolutePath)
+	require(rootDir.isDirectory,"rootDir must be a directory : " + rootDir.getAbsolutePath)
 
 	class FileTrack(file: File, album: String, title:String, date: Date){
 		override def toString = "FileTrack file: " + file + "\nAlbum: " + album + "\nTitle: " + title + "\ndate: " + date + "\n"
@@ -498,11 +498,35 @@ class UrlRepository(file: String){
 
 }
 
+class Configuration(confFile: File){
+	
+	require(confFile.exists,"configuration file does not exist : " + confFile.getAbsolutePath)
+	val prop = new Properties();
+	prop.load(new FileInputStream(confFile));
+
+	def getProperty(name: String) = {
+		val value = prop.getProperty(name);
+		require(value != null,"Configuration property not found : "  + name)	
+		value
+	}
+
+	def downloadDir() = new File(getProperty("download.dir"))
+
+
+}
+
+//==============================================
+//                   Main
+//==============================================
+
+// Args
+val confFile = new File( if(args.length == 0) "jonction.properties" else args(0))
 
 // Dependency Injection
+val conf = new Configuration(confFile)
 val urls = new UrlRepository("urls.txt").getAll
 val remote = new FeedRepository(urls)
-val local = new FilesRepository(new File("/home/steph/Music/Jonction"))
+val local = new FilesRepository(conf.downloadDir)
 val device = new DeviceRepository()
 val jonction = new Jonction(remote,local,device)
 
