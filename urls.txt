@@ -1,0 +1,4 @@
+http://feeds.feedburner.com/javaposse
+http://feeds2.feedburner.com/LesCastCodeurs
+http://www.cbc.ca/podcasting/includes/dnto.xml
+ 
