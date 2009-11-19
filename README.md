@@ -6,7 +6,7 @@ Summary
 
 Jonction was initially written because I wanted a simple and reliable solution to download and synchronise a set of podcast feeds with my MP3 player
 
-* For each feed I always want the n latest episodes on my player (meaning old episodes are automatically deleted)
+* For each feed I always want the n latest episodes on my player (meaning old episodes are automatically deleted). 
 * I do not want a GUI as I also want it to work for a headless server (I want to be able to use old headless PC as a podcast sync device)
 * I do not want an external database for the files metadata. I want each downloaded file to hold its own metadata (meaning, I may modify the ID3 tags of the files to normalize the available ID3 data)
 * I want the synchronisation to work both for MTP and mass-storage devices
@@ -33,27 +33,30 @@ However, it really is an "alpha" quality script
 * Was tested only with my own MTP player
 * The mass-storage MP3 player feature is not implemented yet
 
+If you try Jonction on a MTP player that already contains important data, make sure you have a backup.
 
 Prerequisite
 ============
 
 * A Unix based system (was only tested on Linux, but may be easily adapted to work with cygwin)
 * A Scala interpreter (I use Scala 2.7.3)
-* a wget command line utility available in the system PATH
-* the mtp-tools set of MTP utilities
-* The jar file jaudiotagger.jar from project [Jaudiotagger](http://www.jthink.net/jaudiotagger/)
+* a wget command line utility available in the PATH
+* the mtp-tools set of MTP utilities available in the PATH
+* The jaudiotagger.jar jar file from project [Jaudiotagger](http://www.jthink.net/jaudiotagger/)
 
 
 Install
 =======
 
 * Copy the jaudiotagger.jar in the directory of the script
+* Update the urls.txt file to add your own feeds (and get ride of mine, of course)
+* Create the ~/Music/Jonction directory (or change the download.dir value in jonction.properties file to target an other directory). The podcasts will be downloaded in this directory before the upload to the device.
 
 Run
 ===
 
-* Connect your MP3 player
-* Run the jonction.sh script with the download directory as first parameter (ex : jonction.sh /home/foo/Music/podcasts). The target directory must already exist.
+* Connect your MP3 player (For now, only an MTP MP3 player)
+* In the directory of the script run the ./jonction.sh launcher.
 
 
 
