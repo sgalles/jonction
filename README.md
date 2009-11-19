@@ -29,7 +29,7 @@ Currently, the script solve my initial use cases, I use it on a day to day basis
 
 However, it really is an "alpha" quality script
 
-* It is not tested on a large set of feed
+* It is not tested on a large set of feeds
 * Was tested only with my own MTP player
 * The mass-storage MP3 player feature is not implemented yet
 
