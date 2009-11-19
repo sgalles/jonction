@@ -499,15 +499,25 @@ class UrlRepository(file: File){
 }
 
 class Configuration(confFile: File){
+
+	import scala.collection.jcl
+	import java.util.Collections
 	
 	require(confFile.exists,"configuration file does not exist : " + confFile.getAbsolutePath)
 	val prop = new Properties();
 	prop.load(new FileInputStream(confFile));
 
+	def replaceSystemProperties(rawValue: String) = {
+		val sysProp = System.getProperties		
+		val sysPropNamesArrayList = Collections.list(sysProp.propertyNames)
+		val sysPropNames = new jcl.ArrayList(sysPropNamesArrayList).toList.map(_ match {case s: String => s})
+		(rawValue /: sysPropNames) { (rv,spn) => rv.replace("${"+spn+"}", sysProp.getProperty(spn)) }
+	}
+
 	def getProperty(name: String) = {
 		val value = prop.getProperty(name);
 		require(value != null,"Configuration property not found : "  + name)	
-		value
+		replaceSystemProperties(value)
 	}
 
 	def downloadDir() = new File(getProperty("download.dir"))
