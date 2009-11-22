@@ -1,5 +1,5 @@
 #!/bin/sh
 
-scala  -cp jaudiotagger.jar jonction.scala
+scala  -cp jaudiotagger.jar jonction.scala $*
 
 
