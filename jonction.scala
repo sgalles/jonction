@@ -87,17 +87,8 @@ class Track(title: String, link: String, val pubDate: Date, val length: Int) ext
 
 type Album = SimpleAlbum[Track]
 
-class DeviceTrack(title: String, link: String, val isManaged: Boolean) extends SimpleTrack(title,link){
-	
-	val ReId = """([0-9]+)/.+""".r		
 
-	def id = link match { case ReId(i) => i}
-
-	override def toString = "Track(" + id + ","+ title + "," + link + "," + isManaged + "," + filename + ")"
-		
-}
-
-type DeviceAlbum = SimpleAlbum[DeviceTrack]
+type DeviceAlbum = SimpleAlbum[SimpleTrack]
 
 
 // Repositories and services
@@ -280,10 +271,7 @@ class FilesRepository(rootDir: File){
 	
 }
 
-trait DeviceSession{
-	def saveTrack(album: Album, track: Track)
-	def deleteTrack(album: DeviceAlbum, track: DeviceTrack)
-}
+
 
 class DeviceRepository{
 
@@ -296,9 +284,11 @@ class DeviceRepository{
 	private val Title = """ *Title: (.+)""".r
 	private val Album = """ *Album: (.+)""".r
 	private val Filename = """ *Origfilename: (.+)""".r
-	val dateFormat = new SimpleDateFormat("MM.dd");
-	
+	private val dateFormat = new SimpleDateFormat("MM.dd");
+	private val UrlTrackId = """([0-9]+)/.+""".r		
 
+	private def extractId(uri: String): String = uri match { case UrlTrackId(i) => i}
+	
 	private def collect(lines: List[String],tracks: List[MtpTrack]): List[MtpTrack] = {
 		lines match{
 			case TrackId(id) :: Title(title) :: _ :: _:: Album(album) :: _ :: Filename(filename) :: rest => 			
@@ -309,9 +299,9 @@ class DeviceRepository{
 	}
 
 	private def mtpTrackstoAlbums(mtpTracks: List[MtpTrack]): List[DeviceAlbum] = {
-		val emptyMap = Map[String,List[DeviceTrack]]().withDefaultValue(List[DeviceTrack]())
+		val emptyMap = Map[String,List[SimpleTrack]]().withDefaultValue(List[SimpleTrack]())
 		val tracksByAlbum = (emptyMap /: mtpTracks) { (m,tr) =>
-			val tracks = new DeviceTrack(tr.title,"" + tr.id + "/" + tr.filename,true) :: m(tr.album) 
+			val tracks = new SimpleTrack(tr.title,"" + tr.id + "/" + tr.filename) :: m(tr.album) 
 			m + (tr.album -> tracks)
 		}
 		tracksByAlbum.map( (pair) => new DeviceAlbum(pair._1,pair._2)).toList
@@ -330,8 +320,8 @@ class DeviceRepository{
 	}
 
 	
-	def deleteTrack(albumName: String, track: DeviceTrack){
-		val command = "mtp-delfile" :: "-n" :: track.id :: Nil 	
+	def deleteTrack(albumName: String, track: SimpleTrack){
+		val command = "mtp-delfile" :: "-n" :: extractId(track.link) :: Nil 	
 					   
 		exec(command,new File("/tmp"))
 	}
@@ -375,7 +365,7 @@ class Jonction(remote: FeedRepository, local: FilesRepository, device: DeviceRep
 
 	}
 
-	class SyncedTrack(tr: Track,devTr: DeviceTrack) extends SyncableTrack{
+	class SyncedTrack(tr: Track,devTr: SimpleTrack) extends SyncableTrack{
 		def copyToDevice(albumName: String) {
 			//println("Synced -> Copy -> Already on device ! " + tr)
 		}
@@ -404,7 +394,7 @@ class Jonction(remote: FeedRepository, local: FilesRepository, device: DeviceRep
 		override def toString = "Local || local : " + tr
 	}
 
-	class RemoteTrack(devTr: DeviceTrack) extends SyncableTrack{
+	class RemoteTrack(devTr: SimpleTrack) extends SyncableTrack{
 		def copyToDevice(albumName: String) {
 			//println("Remote -> Copy -> Only on device ! " + devTr)
 		}
@@ -445,7 +435,7 @@ class Jonction(remote: FeedRepository, local: FilesRepository, device: DeviceRep
 		
 		// compute raw list		
 		val srcTrByFilename = (Map[String,Track]() /: src.tracks) { (m,tr) => m + (tr.filename -> tr) }
-		val destTrByFilename = (Map[String,DeviceTrack]() /: dest.tracks) { (m,tr) => m + (tr.filename -> tr) }
+		val destTrByFilename = (Map[String,SimpleTrack]() /: dest.tracks) { (m,tr) => m + (tr.filename -> tr) }
 		
 		// compute separated list
 		val (syncedTracks, localTracks) = src.tracks.partition {tr => destTrByFilename.contains(tr.filename)}
