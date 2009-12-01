@@ -195,8 +195,17 @@ class FeedRepository(urls: List[URL]){
 	}
 }
 
+trait DeviceRepository{
+	
+	def saveTrack(albumName: String, track: Track)
 
-class FilesRepository(rootDir: File){
+	def deleteTrack(albumName: String, track: SimpleTrack)
+
+	def loadAlbums(): List[DeviceAlbum]
+	
+}
+
+class FilesRepository(rootDir: File) extends DeviceRepository {
 	
 	import org.jaudiotagger.audio.mp3._
 	import org.jaudiotagger.tag.id3._	
@@ -205,19 +214,16 @@ class FilesRepository(rootDir: File){
 	require(rootDir.exists,"rootDir does not exist : " + rootDir.getAbsolutePath)
 	require(rootDir.isDirectory,"rootDir must be a directory : " + rootDir.getAbsolutePath)
 
-	class FileTrack(file: File, album: String, title:String, date: Date){
-		override def toString = "FileTrack file: " + file + "\nAlbum: " + album + "\nTitle: " + title + "\ndate: " + date + "\n"
-	}
-
+		
 	val onlyMp3 = new FileFilter(){
 		def accept(file: File) = file.getName.toUpperCase.endsWith(".MP3")
 	}
 
 	
-	def updateMp3Tag(trackFile: File, album: Album, track: Track){
+	def updateMp3Tag(trackFile: File, albumName: String, track: Track){
 		val mp3file = AudioFileIO.read(trackFile) match {case m:MP3File => m}
 		val v2tag = new ID3v24Tag()
-		v2tag.setAlbum(album.name)
+		v2tag.setAlbum(albumName)
 		v2tag.setTitle(track.title)
 		v2tag.setComment(DateParser.format(track.pubDate))
 		mp3file.setID3v2Tag(v2tag)
@@ -226,22 +232,25 @@ class FilesRepository(rootDir: File){
 			
 	def saveAlbums(albums: List[Album]){
 		for( album <- albums ){
-			println("Saving Album : " + album.name)
-			val albumDir = new File(rootDir,album.name)
-			if(!albumDir.exists) albumDir.mkdir()
+			println("Saving Album : " + album.name)			
 			for( track <- album.tracks ){
-				val trackFile = new File(albumDir,track.filename)
-				if(!trackFile.exists){
-					println("Saving Track : " + track)	
-					val command = "wget" :: "-q" :: "-r" :: "3" :: 
-						      "-O" :: track.filename :: track.link :: Nil						
-					retryWhile(trackFile.length == 0) {exec(command,albumDir)}
-					updateMp3Tag(trackFile, album, track)	
-				}else{
-					println("Skipping Track : " + track)	
-				}
-				
+				saveTrack(album.name, track)			
 			}
+		}
+	}
+
+	def saveTrack(albumName: String, track: Track){
+		val albumDir = new File(rootDir,albumName)
+		if(!albumDir.exists) albumDir.mkdir()
+		val trackFile = new File(albumDir,track.filename)
+		if(!trackFile.exists){
+			println("Saving Track : " + track)	
+			val command = "wget" :: "-q" :: "-r" :: "3" :: 
+				      "-O" :: track.filename :: track.link :: Nil						
+			retryWhile(trackFile.length == 0) {exec(command,albumDir)}
+			updateMp3Tag(trackFile, albumName, track)	
+		}else{
+			println("Skipping Track : " + track)	
 		}
 	}
 		
@@ -268,12 +277,17 @@ class FilesRepository(rootDir: File){
 					
 
 
-	
+	def deleteTrack(albumName: String, track: SimpleTrack){
+		// TODO remove duplicate instanciation
+		val albumDir = new File(rootDir,albumName)					   
+		val trackFile = new File(albumDir,track.filename)			
+		trackFile.delete()
+	}
 }
 
 
 
-class DeviceRepository{
+class MtpDeviceRepository extends DeviceRepository{
 
 	private class MtpTrack(val id: String,val album: String,val title: String, val filename: String){
 		
@@ -528,7 +542,7 @@ val conf = new Configuration(confFile)
 val urls = new UrlRepository(conf.urlsFile).getAll
 val remote = new FeedRepository(urls)
 val local = new FilesRepository(conf.downloadDir)
-val device = new DeviceRepository()
+val device = new MtpDeviceRepository()
 val jonction = new Jonction(remote,local,device)
 
 // Execute
