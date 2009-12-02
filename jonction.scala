@@ -510,23 +510,30 @@ class UrlRepository(file: File){
 
 }
 
+object DeviceType extends Enumeration {
+	type DeviceType = Value
+	val Mtp,FileSystem = Value
+}
+
+
 class Configuration(confFile: File){
+	
 
 	import scala.collection.jcl
 	import java.util.Collections
 	
 	require(confFile.exists,"configuration file does not exist : " + confFile.getAbsolutePath)
-	val prop = new Properties();
+	private val prop = new Properties();
 	prop.load(new FileInputStream(confFile));
 
-	def replaceSystemProperties(rawValue: String) = {
+	private def replaceSystemProperties(rawValue: String) = {
 		val sysProp = System.getProperties		
 		val sysPropNamesArrayList = Collections.list(sysProp.propertyNames)
 		val sysPropNames = new jcl.ArrayList(sysPropNamesArrayList).toList.map(_ match {case s: String => s})
 		(rawValue /: sysPropNames) { (rv,spn) => rv.replace("${"+spn+"}", sysProp.getProperty(spn)) }
 	}
 
-	def getProperty(name: String) = {
+	private def getProperty(name: String) = {
 		val value = prop.getProperty(name);
 		require(value != null,"Configuration property not found : "  + name)	
 		replaceSystemProperties(value)
@@ -535,12 +542,26 @@ class Configuration(confFile: File){
 	def downloadDir() = new File(getProperty("download.dir"))
 	def urlsFile() = new File(getProperty("urls.file"))
 
+	
+	def deviceType() = getProperty("device.type") match {
+				case "mtp" => DeviceType.Mtp
+				case "fs" => DeviceType.FileSystem
+			   }
+		
+	def deviceFileSystemDir() = new File(getProperty("device.fs.dir"))
+		
+	
+
+	
+
 
 }
 
 //==============================================
 //                   Main
 //==============================================
+
+
 
 // Args
 val confFile = new File( if(args.length == 0) "jonction.properties" else args(0))
@@ -550,8 +571,10 @@ val conf = new Configuration(confFile)
 val urls = new UrlRepository(conf.urlsFile).getAll
 val remote = new FeedRepository(urls)
 val local = new FilesRepository(conf.downloadDir)
-//val device = new MtpDeviceRepository()
-val device = new FilesRepository(new File("/home/steph/Music/JonctionDevice"))
+val device = conf.deviceType match {
+	case DeviceType.Mtp => new MtpDeviceRepository()
+	case DeviceType.FileSystem => new FilesRepository(conf.deviceFileSystemDir)
+}
 val jonction = new Jonction(remote,local,device)
 
 // Execute
