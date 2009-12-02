@@ -210,11 +210,13 @@ class FilesRepository(rootDir: File) extends DeviceRepository {
 	import org.jaudiotagger.audio.mp3._
 	import org.jaudiotagger.tag.id3._	
 	import org.jaudiotagger.audio._
-
+	
 	require(rootDir.exists,"rootDir does not exist : " + rootDir.getAbsolutePath)
 	require(rootDir.isDirectory,"rootDir must be a directory : " + rootDir.getAbsolutePath)
 
-		
+	// TODO simplify RegExp
+	val Url = """\s*(http\S+)\s*""".r					
+
 	val onlyMp3 = new FileFilter(){
 		def accept(file: File) = file.getName.toUpperCase.endsWith(".MP3")
 	}
@@ -245,10 +247,16 @@ class FilesRepository(rootDir: File) extends DeviceRepository {
 		val trackFile = new File(albumDir,track.filename)
 		if(!trackFile.exists){
 			println("Saving Track : " + track)	
-			val command = "wget" :: "-q" :: "-r" :: "3" :: 
-				      "-O" :: track.filename :: track.link :: Nil						
-			retryWhile(trackFile.length == 0) {exec(command,albumDir)}
-			updateMp3Tag(trackFile, albumName, track)	
+			track.link match { 
+				case Url(_) => 
+					val command = "wget" :: "-q" :: "-r" :: "3" :: 
+					      "-O" :: track.filename :: track.link :: Nil						
+					retryWhile(trackFile.length == 0) {exec(command,albumDir)}
+					updateMp3Tag(trackFile, albumName, track)
+				case _ => 
+					val command = "cp" :: track.link :: albumDir.getAbsolutePath :: Nil
+					exec(command,albumDir)
+			}
 		}else{
 			println("Skipping Track : " + track)	
 		}
@@ -492,7 +500,7 @@ class Jonction(remote: FeedRepository, local: FilesRepository, device: DeviceRep
 }
 
 class UrlRepository(file: File){
-	
+		
 	val Url = """\s*(http\S+)\s*""".r	
 	
 	def getAll() = {
@@ -542,7 +550,8 @@ val conf = new Configuration(confFile)
 val urls = new UrlRepository(conf.urlsFile).getAll
 val remote = new FeedRepository(urls)
 val local = new FilesRepository(conf.downloadDir)
-val device = new MtpDeviceRepository()
+//val device = new MtpDeviceRepository()
+val device = new FilesRepository(new File("/home/steph/Music/JonctionDevice"))
 val jonction = new Jonction(remote,local,device)
 
 // Execute
