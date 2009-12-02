@@ -132,7 +132,8 @@ class FeedRepository(urls: List[URL]){
 			def findUrl(parent: Node): Option[String] = {
 				for ( child <- parent.child){					
 					child match {
-						case <enclosure/> if clean((parent \ "title").text) == cleanedTitle => return Some((child \ "@url").text)
+						case <enclosure/> if clean((parent \ "title").find(_.prefix == null).get.text) == cleanedTitle => 
+							return Some((child \ "@url").text)
 						case _ => findUrl(child) match {
 									   case s @ Some(_) => return s
 									   case None => 
