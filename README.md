@@ -31,9 +31,8 @@ However, it really is an "alpha" quality script
 
 * It is not tested on a large set of feeds
 * Was tested only with my own MTP player
-* The mass-storage MP3 player feature is not implemented yet
 
-If you try Jonction on a MTP player that already contains important data, make sure you have a backup.
+If you try Jonction on a player that already contains important data, make sure you have a backup.
 
 Prerequisite
 ============
@@ -41,7 +40,7 @@ Prerequisite
 * A Unix based system (was only tested on Linux, but may be easily adapted to work with cygwin)
 * A Scala interpreter (I use Scala 2.7.3)
 * a wget command line utility available in the PATH
-* the mtp-tools set of MTP utilities available in the PATH
+* the mtp-tools set of MTP utilities available in the PATH (for an MTP player)
 * The jaudiotagger.jar jar file from project [Jaudiotagger](http://www.jthink.net/jaudiotagger/)
 
 
@@ -51,11 +50,12 @@ Install
 * Copy the jaudiotagger.jar in the directory of the script
 * Update the urls.txt file to add your own feeds (and get ride of mine, of course)
 * Create the ~/Music/Jonction directory (or change the download.dir value in jonction.properties file to target an other directory). The podcasts will be downloaded in this directory before the upload to the device.
+* By default the jonction.properties file is provided with an MTP player configuration. To switch to a mass-storage player configuration, switch device.type=mtp to device.type=fs and set the device.fs.dir value to the mounted directory of the device.
 
 Run
 ===
 
-* Connect your MP3 player (For now, only an MTP MP3 player)
+* Connect your MP3 player
 * In the directory of the script run the ./jonction.sh launcher.
 
 
