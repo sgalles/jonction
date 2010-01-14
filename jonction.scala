@@ -124,7 +124,7 @@ class FeedRepository(urls: List[URL]){
 
 		val elem: Node = XML.load(new StringReader(xmlString)) 		
 				
-		def url(title: String): String = {
+		def url(title: String): Option[String] = {
 
 			def clean(s: String) = s.replaceAll("\\s+"," ")
 
@@ -145,10 +145,7 @@ class FeedRepository(urls: List[URL]){
 				
 			}
 
-			findUrl(elem) match {
-					case Some(s) => s
-					case None => throw new IllegalStateException("No URL found for '" + cleanedTitle + "'")
-				     }				
+			findUrl(elem) 				
 		}
 	}
 
@@ -167,7 +164,7 @@ class FeedRepository(urls: List[URL]){
 			for( jsonTrack <- tracks;
 			     track = jsonListToMap(jsonTrack);
 			     title: String = Any2String(track("title"));
-			     url = xmlInfo.url(title);	
+			     url <- xmlInfo.url(title);	
 			     pubDate: Date = Any2Date(track("publishedDate"))			      
 			   ) yield(new Track(title,url,pubDate,0))
                                               							
