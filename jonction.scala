@@ -61,7 +61,7 @@ def Any2Date(any: Any): Date = any match { case s: String => DateParser.parse(s)
 
 
 object DateParser{
-	val dateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
+	val dateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z",java.util.Locale.ENGLISH);
 	def parse(sDate: String) = dateFormat.parse(sDate)
 	def format(date: Date) = dateFormat.format(date)
 }
